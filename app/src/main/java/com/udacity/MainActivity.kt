@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -73,7 +74,7 @@ class MainActivity : AppCompatActivity() {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
             Log.e("Reviever id",id.toString())
             if (downloadID == id) {
-                Toast.makeText(applicationContext, "Download Completed", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(applicationContext, "Download Completed", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -91,8 +92,42 @@ class MainActivity : AppCompatActivity() {
         val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         downloadID = downloadManager.enqueue(request)
 
+        //Status Query
+        var isComplete:Boolean = false
+        var progress: Int = 0
+        loop@ while(!isComplete){
+            var cursor: Cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadID))
+            if(cursor.moveToFirst()){
+                var status:Int = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+                when(status){
+                    DownloadManager.STATUS_FAILED -> {
+                        isComplete = true
+                        break@loop
+                    }
+                    DownloadManager.STATUS_PAUSED -> {
 
+                    }
+                    DownloadManager.STATUS_PENDING -> {
 
+                    }
+                    DownloadManager.STATUS_RUNNING -> {
+                        var total:Long = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                        if(total >=0){
+                            var downloaded:Long = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                            progress = ((downloaded*100L)/total).toInt()
+                            Log.e("Progress",progress.toString())
+                        }
+
+                    }
+                    DownloadManager.STATUS_SUCCESSFUL -> {
+                        progress = 100
+                        isComplete = true
+                        Toast.makeText(applicationContext, "Download Completed", Toast.LENGTH_SHORT).show();
+                        break@loop
+                    }
+                }
+            }
+        }
 
 
     }

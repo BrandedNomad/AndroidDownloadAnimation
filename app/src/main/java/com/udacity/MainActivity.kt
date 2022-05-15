@@ -1,6 +1,7 @@
 package com.udacity
 
 import android.app.DownloadManager
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -8,7 +9,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.database.Cursor
+import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -16,6 +19,7 @@ import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
@@ -29,17 +33,25 @@ class MainActivity : AppCompatActivity() {
     private lateinit var action: NotificationCompat.Action
     private lateinit var URL: String
     private lateinit var downloadTitle: String
+    private lateinit var fileName:String
+    private var complete = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
         registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
 
+        createChannel(CHANNEL_ID,"Download")
+
         custom_button.setOnClickListener {
             download()
+            complete = true
         }
 
     }
@@ -53,16 +65,19 @@ class MainActivity : AppCompatActivity() {
                     Log.e("MainActivity","glide download selected")
                     URL = "https://github.com/bumptech/glide.git"
                     downloadTitle = "Glide Package"
+                    fileName = "Glide"
                 }
                 R.id.app_download -> if(checked){
                     Log.e("MainActivity","load download selected")
                     URL = "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
                     downloadTitle = "Project Starter Package"
+                    fileName = "Starter"
                 }
                 R.id.retrofit_download -> if(checked){
                     Log.e("MainActivity","retrofit download selected")
                     URL = "https://github.com/square/retrofit.git"
                     downloadTitle = "Retrofit Package"
+                    fileName = "Retrofit"
                 }
             }
         }
@@ -72,9 +87,17 @@ class MainActivity : AppCompatActivity() {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-            Log.e("Reviever id",id.toString())
+
             if (downloadID == id) {
-                //Toast.makeText(applicationContext, "Download Completed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(applicationContext, "Download Completed", Toast.LENGTH_SHORT).show();
+                if(complete){
+
+                    custom_button.hasCompletedDownload()
+                    Log.e("firstFileName",fileName.toString())
+                    Log.e("firstStatus",complete.toString())
+                    notificationManager.sendNotification(downloadTitle,"Download completed",context!!,complete,fileName)
+                    complete = false
+                }
             }
         }
     }
@@ -84,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         val request = DownloadManager.Request(Uri.parse(URL))
                 .setTitle(downloadTitle)
                 .setDescription(getString(R.string.app_description))
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                 .setRequiresCharging(false)
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(true)
@@ -92,55 +115,40 @@ class MainActivity : AppCompatActivity() {
         val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         downloadID = downloadManager.enqueue(request)
 
-        //Status Query
-        var isComplete:Boolean = false
-        var progress: Int = 0
-        loop@ while(!isComplete){
-            var cursor: Cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadID))
-            if(cursor.moveToFirst()){
-                var status:Int = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
-                when(status){
-                    DownloadManager.STATUS_FAILED -> {
-                        isComplete = true
-                        break@loop
-                    }
-                    DownloadManager.STATUS_PAUSED -> {
-
-                    }
-                    DownloadManager.STATUS_PENDING -> {
-
-                    }
-                    DownloadManager.STATUS_RUNNING -> {
-                        var total:Long = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                        if(total >=0){
-                            var downloaded:Long = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                            progress = ((downloaded*100L)/total).toInt()
-                            Log.e("Progress",progress.toString())
-                        }
-
-                    }
-                    DownloadManager.STATUS_SUCCESSFUL -> {
-                        progress = 100
-                        isComplete = true
-                        Toast.makeText(applicationContext, "Download Completed", Toast.LENGTH_SHORT).show();
-                        break@loop
-                    }
-                }
-            }
-        }
-
-
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(receiver)
     }
 
+    private fun createChannel(channelId:String,channelName:String){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            val notificationChannel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_LOW).apply{
+                setShowBadge(false)
+            }
+
+            notificationChannel.enableLights(true)
+            notificationChannel.lightColor= Color.RED
+            notificationChannel.enableVibration(true)
+            notificationChannel.description = "Your download is ready"
+
+
+            notificationManager = getSystemService(
+                NotificationManager::class.java
+            ) as NotificationManager
+
+            notificationManager.createNotificationChannel(notificationChannel)
+
+        }
+    }
+
     companion object {
-//        private const val URL =
-//            "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
-        private const val CHANNEL_ID = "channelId"
+        private const val CHANNEL_ID = "package_download_channel_ID"
     }
 
 }

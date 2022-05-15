@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var downloadTitle: String
     private lateinit var fileName:String
     private var complete = false
+    private var isSelected:Boolean = false
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,8 +51,16 @@ class MainActivity : AppCompatActivity() {
         createChannel(CHANNEL_ID,"Download")
 
         custom_button.setOnClickListener {
-            download()
-            complete = true
+            if(isSelected){
+                custom_button.buttonState = ButtonState.Completed
+                download()
+                complete = true
+            }else{
+                custom_button.buttonState = ButtonState.Clicked
+                Toast.makeText(applicationContext,"Please select option",Toast.LENGTH_SHORT).show()
+            }
+
+
         }
 
     }
@@ -66,18 +75,24 @@ class MainActivity : AppCompatActivity() {
                     URL = "https://github.com/bumptech/glide.git"
                     downloadTitle = "Glide Package"
                     fileName = "Glide"
+                    isSelected = true
                 }
                 R.id.app_download -> if(checked){
                     Log.e("MainActivity","load download selected")
                     URL = "https://github.com/udacity/nd940-c3-advanced-android-programming-project-starter/archive/master.zip"
                     downloadTitle = "Project Starter Package"
                     fileName = "Starter"
+                    isSelected = true
                 }
                 R.id.retrofit_download -> if(checked){
                     Log.e("MainActivity","retrofit download selected")
                     URL = "https://github.com/square/retrofit.git"
                     downloadTitle = "Retrofit Package"
                     fileName = "Retrofit"
+                    isSelected = true
+                }
+                else{
+                    isSelected = false
                 }
             }
         }

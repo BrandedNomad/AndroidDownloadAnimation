@@ -30,7 +30,7 @@ class LoadingButton @JvmOverloads constructor(
         color = Color.RED
     }
 
-    private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
+    var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
 
     }
 
@@ -77,8 +77,8 @@ class LoadingButton @JvmOverloads constructor(
         super.performClick()
         if(buttonState == ButtonState.Completed) {
             buttonState = ButtonState.Loading
+            animation()
         }
-        animation()
 
         return true
     }

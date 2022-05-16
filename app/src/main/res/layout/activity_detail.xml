@@ -22,15 +22,26 @@
 
     <include layout="@layout/content_detail" />
 
-    <Button
-        android:id="@+id/DetailsButton"
+    <androidx.constraintlayout.motion.widget.MotionLayout
+        android:id="@+id/motion_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:background="@color/colorPrimary"
-        android:text="confirm"
-        android:textSize="20sp"
-        android:textColor="@color/white"/>
+        android:layout_height="match_parent"
+        android:minHeight="80dp"
+        app:layout_scrollFlags="scroll|enterAlways|snap|exitUntilCollapsed"
+        app:layoutDescription="@xml/details_screen_motion_layout">
+
+        <Button
+            android:id="@+id/DetailsButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/fab_margin"
+            android:background="@color/colorPrimary"
+            android:text="confirm"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="633dp" />
+    </androidx.constraintlayout.motion.widget.MotionLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

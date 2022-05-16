@@ -39,9 +39,6 @@ class MainActivity : AppCompatActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-
-
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
@@ -59,10 +56,7 @@ class MainActivity : AppCompatActivity() {
                 custom_button.buttonState = ButtonState.Clicked
                 Toast.makeText(applicationContext,"Please select option",Toast.LENGTH_SHORT).show()
             }
-
-
         }
-
     }
 
 
